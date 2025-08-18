@@ -440,4 +440,202 @@ export default function ExpenseCalculatorPage() {
                   XLSX.writeFile(wb, "Event_Items_Template.xlsx");
                   pushToast("success", "Excel template downloaded.");
                 }}
-                style={{ padding: "10px 12px", border: "1px solid #d1d5db", border
+                style={{
+                  padding: "10px 12px",
+                  border: "1px solid #d1d5db",
+                  borderRadius: 8,
+                  background: "#fff",
+                }}
+              >
+                Download Excel Template
+              </button>
+            </div>
+
+            <div style={{ width: "100%", maxWidth: 480, marginBottom: 24 }}>
+              <select
+                onChange={(e) => setSelectedEvent(e.target.value)}
+                style={{ width: "100%", padding: "10px 12px", border: "1px solid #d1d5db", borderRadius: 8 }}
+              >
+                <option value="">Select Event Type</option>
+                {Object.keys(eventItems).map((k) => (
+                  <option key={k} value={k}>
+                    {k.charAt(0).toUpperCase() + k.slice(1)}
+                  </option>
+                ))}
+                <option value="custom">➕ Custom Event</option>
+              </select>
+            </div>
+
+            {selectedEvent === "custom" && (
+              <div style={{ width: "100%", maxWidth: 1024, marginBottom: 24 }}>
+                <input
+                  placeholder="Enter Custom Event Name"
+                  value={customEventName}
+                  onChange={(e) => setCustomEventName(e.target.value)}
+                  style={{ marginBottom: 12, width: "100%", padding: "10px 12px", border: "1px solid #d1d5db", borderRadius: 8 }}
+                />
+                <button
+                  onClick={addCustomItem}
+                  style={{ marginBottom: 12, padding: "10px 12px", border: "1px solid #d1d5db", borderRadius: 8, background: "#fff" }}
+                >
+                  Add Item
+                </button>
+                <div style={{ background: "#fff", boxShadow: "0 2px 10px rgba(0,0,0,0.06)", borderRadius: 12, overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead style={{ background: "#f3f4f6" }}>
+                      <tr>
+                        <th style={{ padding: 8, border: "1px solid #e5e7eb", textAlign: "left" }}>Item Name</th>
+                        <th style={{ padding: 8, border: "1px solid #e5e7eb", textAlign: "left" }}>Price</th>
+                        <th style={{ padding: 8, border: "1px solid #e5e7eb", textAlign: "left" }}>Quantity</th>
+                        <th style={{ padding: 8, border: "1px solid #e5e7eb", textAlign: "left" }}>Subtotal</th>
+                        <th style={{ padding: 8, border: "1px solid #e5e7eb", textAlign: "left" }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {customItems.map((item) => (
+                        <tr key={item.id}>
+                          <td style={{ padding: 8, border: "1px solid #e5e7eb" }}>
+                            <input
+                              value={item.name}
+                              onChange={(e) => updateCustomItem(item.id, "name", e.target.value)}
+                              style={{ width: "100%", padding: "8px 10px", border: "1px solid #d1d5db", borderRadius: 8 }}
+                            />
+                          </td>
+                          <td style={{ padding: 8, border: "1px solid #e5e7eb" }}>
+                            <input
+                              type="number"
+                              value={item.price}
+                              onChange={(e) => updateCustomItem(item.id, "price", e.target.value)}
+                              style={{ width: "100%", padding: "8px 10px", border: "1px solid #d1d5db", borderRadius: 8 }}
+                            />
+                          </td>
+                          <td style={{ padding: 8, border: "1px solid #e5e7eb" }}>
+                            <input
+                              type="number"
+                              min={0}
+                              value={quantities[item.id] || ""}
+                              onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                              style={{ width: 96, padding: "8px 10px", border: "1px solid #d1d5db", borderRadius: 8 }}
+                            />
+                          </td>
+                          <td style={{ padding: 8, border: "1px solid #e5e7eb", fontWeight: 600 }}>
+                            ₹{(quantities[item.id] || 0) * item.price}
+                          </td>
+                          <td style={{ padding: 8, border: "1px solid #e5e7eb" }}>
+                            <button
+                              onClick={() => deleteCustomItem(item.id)}
+                              style={{ padding: "8px 10px", border: "1px solid #ef4444", color: "#ef4444", borderRadius: 8, background: "#fff" }}
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {selectedEvent && selectedEvent !== "custom" && eventItems[selectedEvent] && (
+              <div style={{ display: "grid", gap: 12, width: "100%", maxWidth: 768 }}>
+                {eventItems[selectedEvent].map((item) => (
+                  <div
+                    key={item.id}
+                    style={{
+                      background: "#fff",
+                      boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
+                      borderRadius: 12,
+                      padding: 16,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 16, fontWeight: 600 }}>{item.name}</div>
+                      <div style={{ color: "#4b5563" }}>₹{item.price} per item</div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <input
+                        type="number"
+                        min={0}
+                        value={quantities[item.id] || ""}
+                        onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                        placeholder="Qty"
+                        style={{ width: 96, padding: "8px 10px", border: "1px solid #d1d5db", borderRadius: 8 }}
+                      />
+                      <span style={{ fontWeight: 600 }}>₹{(quantities[item.id] || 0) * item.price}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {selectedEvent && (
+              <div
+                style={{
+                  marginTop: 24,
+                  padding: 16,
+                  background: "#fff",
+                  boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
+                  borderRadius: 16,
+                  textAlign: "center",
+                  width: "100%",
+                  maxWidth: 768,
+                }}
+              >
+                <h2 style={{ fontSize: 18, fontWeight: 700 }}>Total Expense</h2>
+                <p style={{ fontSize: 22, marginTop: 8, color: "#059669", fontWeight: 700 }}>₹{calculateTotal()}</p>
+                <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 12 }}>
+                  <button
+                    onClick={() => setQuantities({})}
+                    style={{ padding: "10px 12px", border: "1px solid #d1d5db", borderRadius: 8, background: "#fff" }}
+                  >
+                    Reset Quantities
+                  </button>
+                  <button
+                    onClick={sendEmail}
+                    style={{ padding: "10px 12px", borderRadius: 8, background: "#111827", color: "#fff" }}
+                  >
+                    Send Details via Email
+                  </button>
+                  <button
+                    onClick={generatePDF}
+                    style={{ padding: "10px 12px", border: "1px solid #d1d5db", borderRadius: 8, background: "#fff" }}
+                  >
+                    Download PDF
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </main>
+
+      {/* Toasts */}
+      <div style={{ position: "fixed", top: 16, right: 16, display: "grid", gap: 8, zIndex: 50 }}>
+        {toasts.map((t) => (
+          <Toast key={t.id} t={t} />
+        ))}
+      </div>
+
+      {/* Footer */}
+      <footer style={{ borderTop: "1px solid #e5e7eb", background: "#fff", color: "#374151", fontSize: 14 }} role="contentinfo">
+        <div style={{ maxWidth: 960, margin: "0 auto", padding: "16px 16px" }}>
+          <p style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
+            Powered and Built by <span style={{ fontWeight: 600 }}>MADE CREATIVE WORKS</span>
+          </p>
+          <div style={{ display: "grid", gap: 6 }}>
+            <div>MADE CREATIVE WORKS, BC 86, Welling Compound, Independence Road, Camp, Belagavi, Karnataka, India – 590001</div>
+            <div>
+              <a href="tel:9535395538">9535395538</a> / <a href="tel:9901315423">9901315423</a>
+            </div>
+            <div><a href="mailto:madeinbelgaum@gmail.com">madeinbelgaum@gmail.com</a></div>
+            <div><a href="http://www.madecreativeworks.com" target="_blank" rel="noreferrer">www.madecreativeworks.com</a></div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
