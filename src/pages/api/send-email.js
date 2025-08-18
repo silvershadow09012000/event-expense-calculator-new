@@ -1,16 +1,25 @@
-import type { NextApiRequest, NextApiResponse } from "next";
 import nodemailer from "nodemailer";
 
-const isPhoneValid = (s: string) => /^\d{10}$/.test(s);
-const isEmailValid = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+const isPhoneValid = (s) => /^\d{10}$/.test(s);
+const isEmailValid = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
 
   try {
     const body = req.body || {};
-    if (body.phone && !isPhoneValid(body.phone)) return res.status(400).json({ error: "Invalid phone. Must be 10 digits." });
-    if (body.email && !isEmailValid(body.email)) return res.status(400).json({ error: "Invalid email format." });
+
+    if (body.phone && !isPhoneValid(body.phone)) {
+      res.status(400).json({ error: "Invalid phone. Must be 10 digits." });
+      return;
+    }
+    if (body.email && !isEmailValid(body.email)) {
+      res.status(400).json({ error: "Invalid email format." });
+      return;
+    }
 
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
@@ -27,7 +36,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 Date: ${body.eventDate || ""}
 
 Items:
-${(body.items || []).filter((it:any)=>(it.quantity??0)>0).map((it:any)=>`- ${it.name}: ₹${it.price} x ${it.quantity} = ₹${it.subtotal}`).join("\n") || "(No items selected.)"}
+${
+  (body.items || [])
+    .filter((it) => (it.quantity ?? 0) > 0)
+    .map((it) => `- ${it.name}: ₹${it.price} x ${it.quantity} = ₹${it.subtotal}`)
+    .join("\n") || "(No items selected.)"
+}
 
 Total: ₹${body.total}
 
@@ -55,17 +69,21 @@ City: ${body.city || ""}
           <tbody>
             ${
               (body.items || [])
-                .filter((it:any)=>(it.quantity??0)>0)
-                .map((it:any)=> `<tr>
+                .filter((it) => (it.quantity ?? 0) > 0)
+                .map(
+                  (it) => `<tr>
                   <td style="padding:8px;border:1px solid #e5e7eb">${it.name}</td>
                   <td style="padding:8px;border:1px solid #e5e7eb">₹${Number(it.price || 0).toLocaleString("en-IN")}</td>
                   <td style="padding:8px;border:1px solid #e5e7eb">${Number(it.quantity || 0)}</td>
                   <td style="padding:8px;border:1px solid #e5e7eb">₹${Number(it.subtotal || 0).toLocaleString("en-IN")}</td>
-                </tr>`).join("") || `<tr><td colspan="4" style="padding:8px;border:1px solid #e5e7eb;color:#6b7280">No items selected.</td></tr>`
+                </tr>`
+                )
+                .join("") ||
+              `<tr><td colspan="4" style="padding:8px;border:1px solid #e5e7eb;color:#6b7280">No items selected.</td></tr>`
             }
           </tbody>
         </table>
-        <p style="margin:12px 0 20px 0;font-size:16px"><strong>Total:</strong> ₹${Number(body.total||0).toLocaleString("en-IN")}</p>
+        <p style="margin:12px 0 20px 0;font-size:16px"><strong>Total:</strong> ₹${Number(body.total || 0).toLocaleString("en-IN")}</p>
         <h3 style="margin:0 0 8px 0;font-size:14px;color:#374151">User Details</h3>
         <p style="margin:0"><strong>Name:</strong> ${body.name || ""}</p>
         <p style="margin:0"><strong>Phone:</strong> ${body.phone || ""}</p>
@@ -75,8 +93,12 @@ City: ${body.city || ""}
     `;
 
     await transporter.sendMail({
-      from, to, subject, text, html,
-      replyTo: (body.email && isEmailValid(body.email)) ? body.email : undefined,
+      from,
+      to,
+      subject,
+      text,
+      html,
+      replyTo: body.email && isEmailValid(body.email) ? body.email : undefined,
     });
 
     res.status(200).json({ ok: true });
