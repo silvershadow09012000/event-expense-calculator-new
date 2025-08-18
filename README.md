@@ -21,3 +21,4 @@ npm run dev
 - Import repo into Vercel
 - Add env vars from `.env.local.example`
 - Use `/expense-calculator` as the embed URL in your Wix iframe
+
